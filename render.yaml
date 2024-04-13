@@ -1,0 +1,4 @@
+services:
+  - name: freelancer-api
+    env: node
+    startCommand: npm start

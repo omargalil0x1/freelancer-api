@@ -14,7 +14,11 @@ async function index(request, response) {
         const document = dom.window.document;
 
         const titles = document.getElementsByClassName('JobSearchCard-primary-heading')
+
+        const links = document.querySelectorAll('.JobSearchCard-primary-heading .JobSearchCard-primary-heading-link')
+
         const description = document.getElementsByClassName('JobSearchCard-primary-description')
+
         const tags = document.getElementsByClassName('JobSearchCard-primary-tags')
 
         const price = document.querySelectorAll('.JobSearchCard-secondary-price')
@@ -37,13 +41,14 @@ async function index(request, response) {
             let bids_if = bids[i] == undefined || null ? 'No Bids Yet' : bids[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim()
 
             posts.push({
-                'title': titles[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-                'description': description[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-                'tags': tags[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-                'days': days[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-                'price': price_if,
-                'bids': bids_if,
-                'state': status_if,
+                'project-title': titles[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+                'project-description': description[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+                'project-link': 'https://www.freelancer.com' + links[i].href,
+                'project-tags': tags[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+                'ends in': days[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+                'project-price': price_if,
+                'freelancers-bids': bids_if,
+                'payment': status_if,
             })
         }
 
@@ -54,7 +59,8 @@ async function index(request, response) {
     }
     catch (error) {
         response.status(401).json({
-            'error': `${error}`,
+            // 'error': `Error, Something went wrong`,
+            'error': `Something went wrong!`
         })
     }
 }

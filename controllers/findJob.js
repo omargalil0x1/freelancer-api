@@ -2,7 +2,6 @@ const { JSDOM } = require('jsdom');
 
 const axios = require('axios');
 
-
 async function index(request, response) {
 
     try {

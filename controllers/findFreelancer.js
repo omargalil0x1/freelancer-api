@@ -1,62 +1,46 @@
 const { JSDOM } = require('jsdom');
-
 const axios = require('axios');
 
 async function index(request, response) {
-
     try {
+        const [freelancersResponse] = await Promise.all([
+            axios.get(`https://www.freelancer.com/freelancers${request.params.page_number !== undefined && Boolean(Number(request.params.page_number)) == true ? "/" + request.params.page_number : ""}`)
+        ]);
 
-        const RESPONSE = await axios.get(`https://www.freelancer.com/freelancers${request.params.page_number !== undefined && Boolean(Number(request.params.page_number)) == true ? "/" + request.params.page_number : ""}`);
-
-        const dom = new JSDOM(RESPONSE.data);
-
+        const freelancersHTML = freelancersResponse.data;
+        const dom = new JSDOM(freelancersHTML);
         const document = dom.window.document;
 
-        const freelancers_username = document.querySelectorAll('.freelancer-details .freelancer-details-header .find-freelancer-username')
+        const freelancers = [];
 
-        const freelancers_hr_rating = document.querySelectorAll('.freelancer-card-stats .freelancer-hourlyrate')
+        const freelancerCards = document.querySelectorAll('.freelancer-details');
 
-        const freelancers_reviews = document.querySelectorAll('.freelancer-card-stats .Rating-review')
-
-        const freelancers_earnings = document.querySelectorAll('.freelancer-card-stats .Earnings')
-
-        const freelancers_stars = document.querySelectorAll('.freelancer-card-stats .Rating')
-
-        const freelancers_skills = document.querySelectorAll('.freelancer-details .top-skills')
-
-        const freelancers_bio = document.querySelectorAll('.freelancer-details .bio')
-
-        let freelancers = []
-
-        let number_of_cards = document.querySelectorAll('.freelancer-details .freelancer-details-header .find-freelancer-username').length
-
-        for(let i = 0; i < number_of_cards; i++) {
+        freelancerCards.forEach((card) => {
+            const usernameElement = card.querySelector('.freelancer-details-header .find-freelancer-username');
+            const hrRatingElement = card.querySelector('.freelancer-card-stats .freelancer-hourlyrate');
+            const reviewsElement = card.querySelector('.freelancer-card-stats .Rating-review');
+            const earningsElement = card.querySelector('.freelancer-card-stats .Earnings');
+            const starsElement = card.querySelector('.freelancer-card-stats .Rating');
+            const skillsElement = card.querySelector('.freelancer-details .top-skills');
+            const bioElement = card.querySelector('.freelancer-details .bio');
 
             freelancers.push({
-                'name': freelancers_username[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-                'hour-rating': freelancers_hr_rating[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-                'reviews': freelancers_reviews[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-                'earnings': freelancers_earnings[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-                'stars': freelancers_stars[i].getAttribute('data-star_rating'),
-                'skills': freelancers_skills[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-                'bio': freelancers_bio[i].textContent.replace('<br>', '').replace(/\n/g, '').trim(),
-                'freelancer-profile': 'https://freelancer.com/u/' + freelancers_username[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-            })
-        }
+                name: usernameElement.textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+                hourRating: hrRatingElement.textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+                reviews: reviewsElement.textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+                earnings: earningsElement.textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+                stars: starsElement.getAttribute('data-star_rating'),
+                skills: skillsElement.textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+                bio: bioElement.textContent.replace('<br>', '').replace(/\n/g, '').trim(),
+                freelancerProfile: 'https://freelancer.com/u/' + usernameElement.textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+            });
+        });
 
-        response.status(200).json({
-            freelancers,
-        })
-
-
-    }
-    catch (error) {
-        response.status(401).json({
-            // 'error': `Something went wrong!`,
-            'error': error,
-        })
+        response.status(200).json({ freelancers });
+    } catch (error) {
+        console.error('Error fetching or parsing HTML:', error);
+        response.status(500).json({ error: 'Something went wrong' });
     }
 }
 
-
-module.exports = { index }
+module.exports = { index };

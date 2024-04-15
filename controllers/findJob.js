@@ -1,68 +1,69 @@
 const { JSDOM } = require('jsdom');
-
 const axios = require('axios');
 
 async function index(request, response) {
-
     try {
+        const page_number = request.params.page_number !== undefined && !isNaN(request.params.page_number) ? `/${request.params.page_number}` : '';
+        const url = `https://www.freelancer.com/jobs${page_number}`;
 
-        const RESPONSE = await axios.get(`https://www.freelancer.com/jobs${request.params.page_number !== undefined && Boolean(Number(request.params.page_number)) == true ? "/" + request.params.page_number : ""}`);
-
-        const dom = new JSDOM(RESPONSE.data);
-
+        const { data } = await axios.get(url);
+        const dom = new JSDOM(data);
         const document = dom.window.document;
 
-        const titles = document.getElementsByClassName('JobSearchCard-primary-heading')
+        const posts = [];
 
-        const links = document.querySelectorAll('.JobSearchCard-primary-heading .JobSearchCard-primary-heading-link')
+        const jobCards = document.querySelectorAll('.JobSearchCard-item');
 
-        const description = document.getElementsByClassName('JobSearchCard-primary-description')
+        jobCards.forEach((card) => {
+            const titleElement = card.querySelector('.JobSearchCard-primary-heading');
+            const descriptionElement = card.querySelector('.JobSearchCard-primary-description');
+            const linkElement = card.querySelector('.JobSearchCard-primary-heading-link');
+            const tagsElement = card.querySelector('.JobSearchCard-primary-tags');
+            const priceElement = card.querySelector('.JobSearchCard-secondary-price');
+            const bidsElement = card.querySelector('.JobSearchCard-secondary-entry');
+            const daysElement = card.querySelector('.JobSearchCard-primary-heading-days');
+            const statusElement = card.querySelector('.JobSearchCard-primary-heading-status');
 
-        const tags = document.getElementsByClassName('JobSearchCard-primary-tags')
-
-        const price = document.querySelectorAll('.JobSearchCard-secondary-price')
-
-        const bids = document.querySelectorAll('.JobSearchCard-secondary-entry')
-
-        const days = document.getElementsByClassName('JobSearchCard-primary-heading-days')
-
-        const status = document.querySelectorAll('.JobSearchCard-primary-heading-status')
-
-
-        let posts = []
-
-        let number_of_cards = document.getElementsByClassName('JobSearchCard-item ').length
-
-        for(let i = 0; i < number_of_cards; i++) {
-
-            let status_if = status[i] == undefined || null ? 'Payment Not Verified' : 'Payment Verified'
-            let price_if = price[i] == undefined || null ? 'No Price Yet' : price[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim()
-            let bids_if = bids[i] == undefined || null ? 'No Bids Yet' : bids[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim()
+            const projectTitle = titleElement?.textContent?.trim().replace('<br>', '').replace(/\s+/g, ' ') || 'No Title';
+            const projectDescription = descriptionElement?.textContent?.trim().replace('<br>', '').replace(/\s+/g, ' ') || 'No Description';
+            const projectLink = linkElement?.href ? 'https://www.freelancer.com' + linkElement.href : '';
+            const projectTags = tagsElement?.textContent?.trim().replace('<br>', '').replace(/\s+/g, ' ') || 'No Tags';
+            const projectPrice = priceElement?.textContent?.trim().replace('<br>', '').replace(/\s+/g, ' ') || 'No Price';
+            const freelancersBids = bidsElement?.textContent?.trim().replace('<br>', '').replace(/\s+/g, ' ') || 'No Bids';
+            const endsIn = daysElement?.textContent?.trim().replace('<br>', '').replace(/\s+/g, ' ') || 'No Deadline';
+            const paymentStatus = statusElement?.textContent?.trim() ? 'Payment Verified' : 'Payment Not Verified';
 
             posts.push({
-                'project-title': titles[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-                'project-description': description[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-                'project-link': 'https://www.freelancer.com' + links[i].href,
-                'project-tags': tags[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-                'ends in': days[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
-                'project-price': price_if,
-                'freelancers-bids': bids_if,
-                'payment': status_if,
-            })
-        }
+                'project-title': projectTitle,
+                'project-description': projectDescription,
+                'project-link': projectLink,
+                'project-tags': projectTags,
+                'ends in': endsIn,
+                'project-price': projectPrice,
+                'freelancers-bids': freelancersBids,
+                'payment': paymentStatus,
+            });
+        });
 
-        response.status(200).json({
-            posts,
-        })
-
-    }
-    catch (error) {
-        response.status(401).json({
-            // 'error': `Error, Something went wrong`,
-            'error': `Something went wrong!`
-        })
+        response.status(200).json({ posts });
+    } catch (error) {
+        console.error('Error fetching or parsing HTML:', error);
+        response.status(500).json({ error: 'Something went wrong' });
     }
 }
 
+module.exports = { index };
 
-module.exports = { index }
+
+/*
+    posts.push({
+        'project-title': titles[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+        'project-description': description[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+        'project-link': 'https://www.freelancer.com' + links[i].href,
+        'project-tags': tags[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+        'ends in': days[i].textContent.replace('<br>', '').replace(/\s+/g, ' ').trim(),
+        'project-price': price_if,
+        'freelancers-bids': bids_if,
+        'payment': status_if,
+    })
+*/

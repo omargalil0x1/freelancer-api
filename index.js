@@ -15,13 +15,13 @@ app.get('/api/find-job', findJob.index) // finding the first page jobs.
 
 app.get('/api/find-job/:page_number', findJob.index) // search in specific page.
 
-app.get('/api/find-freelancers/', findFreelancer.index)
+app.get('/api/find-freelancers', findFreelancer.index)
 
 app.get('/api/find-freelancers/:page_number', findFreelancer.index) // get freelancers.
 
 app.all("*", (request, response) => {
     response.status(404).json({
-        'error 404': 'Endpoint not found'
+        'error': '404 not found'
     })
 })
 

@@ -43,3 +43,15 @@ Endpoints:
 ===========================
 Data Retrieved: Title, Description, Tags/Skills, Bids, Average Price (hourly paid, fixed price projects).
 Default Number of Projects: 50 jobs/projects posted by other clients.
+
+### Starter Plan
+- **Price:** $8.99 Monthly
+- **Features:**
+  - 150,000 Requests / Monthly
+  - Standard Support
+
+### Pro Plan
+- **Price:** $39.99 Monthly
+- **Features:**
+  - 1,500,000 Requests / Monthly
+  - Standard Support
